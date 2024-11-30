@@ -1,0 +1,14 @@
+{
+  "name": "docker-handson",
+  "version": "1.0.0",
+  "description": "A sample Node.js app for Docker multistage testing",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "build": "echo 'Build step is complete!'"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+
