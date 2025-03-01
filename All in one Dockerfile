@@ -1,0 +1,99 @@
+#----------------Single Stage Dockerfile--------------------
+
+ubuntu@ip-172-31-22-137:~/online_shopping_app$ cat Dockerfile 
+#Getting Base Image for Nodejs
+
+FROM node:18
+
+# Making working Directory to store files
+WORKDIR /app
+
+#COPY package.json and package-lock.json first (for better caching)
+COPY package*.json ./
+ 
+#Install Depedencies
+RUN npm install
+
+#COPY Everything from Source (HOST) to the destination (Container)
+COPY . .
+
+#Expose the Port
+EXPOSE 5173
+
+#Serve the Application
+CMD ["npm","run","dev"]
+
+
+#-----------Multistage Docker file---------------------
+
+ubuntu@ip-172-31-17-8:~/online_shopping_app$ cat Dockerfile-multi 
+#Base image to build NPM related package install (stage 1) (Big image)
+
+FROM node:18 AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+# Base image to run the application only (stage 2) (small image)
+
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app .
+
+EXPOSE 5173
+
+CMD ["npm","run","dev"]
+
+
+
+#--------------------Disroless image used in production-------------------------
+
+ubuntu@ip-172-31-17-8:~/online_shopping_app$ cat Dockerfile-multi 
+#Base image to build NPM related package install (stage 1) (Big image)
+
+FROM node:18 AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+# Base image to run the application only (stage 2) (small image)
+
+FROM gcr.io/distroless/nodejs18-debian12
+
+WORKDIR /app
+
+COPY --from=builder /app .
+
+EXPOSE 5173
+
+CMD ["npm","run","dev"]
+
+------------Output
+
+ubuntu@ip-172-31-17-8:~/online_shopping_app$ 
+ubuntu@ip-172-31-17-8:~/online_shopping_app$ docker images
+REPOSITORY                            TAG         IMAGE ID       CREATED          SIZE
+online-app-distroless                 latest      fdb4d8267caf   5 minutes ago    218MB
+<none>                                <none>      46683410e347   5 minutes ago    1.22GB
+online-app-small                      latest      ad702e7826e2   19 minutes ago   230MB
+<none>                                <none>      febccf931f54   19 minutes ago   1.22GB
+online_app                            latest      fa1bbea1b360   2 hours ago      1.22GB
+node                                  18-alpine   70649fe1a0d7   8 days ago       127MB
+node                                  18          512bc7f93b1c   8 days ago       1.09GB
+nginx                                 latest      b52e0b094bc0   3 weeks ago      192MB
+gcr.io/distroless/nodejs18-debian12   latest      bb3148467fc6   N/A              115MB
+
+
+https://github.com/GoogleContainerTools/distroless/tree/main/nodejs  (link for distroless)
